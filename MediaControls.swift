@@ -11,7 +11,6 @@ struct MediaSkipShape: Shape {
         path.addLine(to: CGPoint(x: rect.maxY, y: rect.minY))
         path.addLine(to: CGPoint(x: rect.minX, y: rect.midY))
         
-        
         return path
     }
 }

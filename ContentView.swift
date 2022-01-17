@@ -1,25 +1,30 @@
 import SwiftUI
+import AVKit
 
 struct ContentView: View {
+    let totalSeconds = 177
+    
     @State private var showControls = false
     @State private var isPlaying = false
     @State private var progress: Double = 0
+    @State private var currentTime: Double = 0
+    @State private var player = AVPlayer(url: Bundle.main.url(forResource: "LifeIsAGodTierGame", withExtension: "mp4")!)
+    
+    var formattedCurrentTime: String {
+        let total_seconds = Int(self.currentTime)
+        let minutes = total_seconds / 60
+        let seconds = total_seconds % 60
+        return "\(minutes):\(seconds < 10 ? "0\(seconds)" : String(seconds))"
+    }
     
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                Color.black
-                    .onTapGesture {
-                        withAnimation(self.showControls ? .easeOut : .easeIn) {
-                            self.showControls.toggle()
-                        }
-                    }
-                
-                Image("tomozaki")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: geo.size.height)
-                    .zIndex(0)
+                VideoPlayer(player: self.player) { seconds in
+                    // Update the UI as the video plays
+                    self.currentTime = seconds
+                    self.progress = seconds / Double(self.totalSeconds)
+                }
                 
                 if self.showControls {
                     ZStack {
@@ -46,10 +51,10 @@ struct ContentView: View {
                             Spacer()
                             VStack(alignment: .leading) {
                                 HStack {
-                                    Text("12:46")
+                                    Text("\(self.formattedCurrentTime)")
                                     Text("/")
                                         .foregroundColor(.secondary)
-                                    Text("23:47")
+                                    Text("2:57")
                                         .foregroundColor(.secondary)
                                 }
                                 PercentageSlider(color: .accentColor, percentage: self.$progress)
@@ -67,6 +72,11 @@ struct ContentView: View {
                                 .frame(width: self.isPlaying ? 30 : 40)
                                 .onTapGesture {
                                     self.isPlaying.toggle()
+                                    if self.isPlaying {
+                                        self.player.play()
+                                    } else {
+                                        self.player.pause()
+                                    }
                                 }
                             SkipForward()
                             Spacer()
@@ -79,7 +89,6 @@ struct ContentView: View {
             .onTapGesture {
                 withAnimation(self.showControls ? .easeOut : .easeIn) {
                     self.showControls.toggle()
-                    
                 }
             }
         }
