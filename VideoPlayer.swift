@@ -30,19 +30,12 @@ class AVPlayerView: UIView {
 
 final class VideoPlayer: UIViewRepresentable {
     let player: AVPlayer
-    var onProgressUpdate: (Double) -> Void
     
-    init(player: AVPlayer, onProgressUpdate: @escaping (Double) -> Void) {
+    init(player: AVPlayer) {
         self.player = player
-        self.onProgressUpdate = onProgressUpdate
     }
     
     func makeUIView(context: Context) -> AVPlayerView {
-        let interval = CMTime(seconds: 1, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-        self.player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
-            self.onProgressUpdate(time.seconds)
-        }
-        
         return AVPlayerView(player: self.player)
     }
     
