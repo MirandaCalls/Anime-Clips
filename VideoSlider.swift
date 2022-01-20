@@ -3,6 +3,7 @@ import AVKit
 
 struct VideoSlider: View {
     let player: AVPlayer
+    let totalDuration: Double
     let color: Color
     
     @State private var percentage: Double = 0
@@ -12,6 +13,12 @@ struct VideoSlider: View {
     @State private var draggerScale: CGFloat = 1
     @State private var draggerPosition = CGSize.zero
     @State private var draggerOffset = CGSize.zero
+    
+    init(player: AVPlayer, color: Color) {
+        self.player = player
+        self.totalDuration = self.player.currentItem?.duration.seconds ?? 0
+        self.color = color
+    }
     
     var body: some View {
         GeometryReader { geo in
@@ -42,7 +49,9 @@ struct VideoSlider: View {
                         DragGesture()
                             .onChanged {
                                 self.player.pause()
-                                self.draggerScale = 1.4
+                                withAnimation(.easeIn(duration: 0.1)) {
+                                    self.draggerScale = 1.4
+                                }
                                 
                                 self.draggerOffset.width = self.handleOffsetBounds(
                                     newOffset: $0.translation.width,
@@ -53,7 +62,9 @@ struct VideoSlider: View {
                                 self.percentage = (self.draggerOffset.width + self.draggerPosition.width) / (geo.size.width - 20)
                             }
                             .onEnded {
-                                self.player.play()
+                                withAnimation(.easeIn(duration: 0.1)) {
+                                    self.draggerScale = 1
+                                }
                                 
                                 self.draggerPosition.width += self.handleOffsetBounds(
                                     newOffset: $0.translation.width,
@@ -62,13 +73,9 @@ struct VideoSlider: View {
                                 self.progressLength = self.draggerPosition.width
                                 
                                 self.draggerOffset = CGSize.zero
-                                withAnimation {
-                                    self.draggerScale = 1
-                                }
                                 
-                                let seconds = self.percentage * (self.player.currentItem?.duration.seconds ?? 0)
-                                let interval = CMTime(seconds: seconds, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-                                self.player.seek(to: interval)
+                                self.seekToTime(for: self.percentage * self.totalDuration)
+                                self.player.play()
                             }
                     )
             }
@@ -81,15 +88,19 @@ struct VideoSlider: View {
     }
     
     func setupAVPlayerListener() {
-        let interval = CMTime(seconds: 0.01, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        let interval = CMTime(seconds: 0.1, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         self.player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
-            let total_seconds = self.player.currentItem?.duration.seconds ?? 0
-            self.percentage = time.seconds / total_seconds
+            self.percentage = time.seconds / self.totalDuration
             withAnimation {
                 self.draggerPosition.width = self.percentage * (self.totalLength - 20)
                 self.progressLength = self.draggerPosition.width
             }
         }
+    }
+    
+    func seekToTime(for seconds: Double) {
+        let interval = CMTime(seconds: seconds, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        self.player.seek(to: interval)
     }
     
     // For ensuring that the dragger never goes off the screen
