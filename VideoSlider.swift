@@ -4,20 +4,25 @@ import AVKit
 struct VideoSlider: View {
     let player: AVPlayer
     let color: Color
+    let onDragEnd: () -> Void
     
     @State private var percentage: Double = 0
-    @State private var totalLength: CGFloat = 0
     @State private var progressLength: CGFloat = 0
     
+    let draggerSize: CGFloat = 20
     @State private var draggerScale: CGFloat = 1
     @State private var draggerPosition = CGSize.zero
     @State private var draggerOffset = CGSize.zero
     
+    var totalDuration: Double {
+        self.player.currentItem?.duration.seconds ?? 0
+    }
+    
     var body: some View {
-        GeometryReader { geo in
+        GeometryReader { fullPage in
             ZStack(alignment: .leading) {
                 Rectangle()
-                    .frame(width: geo.size.width, height: 6)
+                    .frame(width: fullPage.size.width, height: 6)
                     .background(.white.opacity(0.5))
                 
                 Rectangle()
@@ -25,69 +30,52 @@ struct VideoSlider: View {
                     .frame(width: self.progressLength, height: 6)
                 
                 Circle()
-                    .frame(width: 20, height: 20)
+                    .frame(width: self.draggerSize, height: self.draggerSize)
                     .scaleEffect(self.draggerScale)
                     .shadow(color: .black, radius: 2)
                     .onHover { hovering in
-                        withAnimation(.easeIn(duration: 0.1)) {
-                            if hovering {
-                                self.draggerScale = 1.4
-                            } else {
-                                self.draggerScale = 1
-                            }
-                        }
+                        self.updateDraggerKnob(scaleUp: hovering)
                     }
                     .offset(x: self.draggerPosition.width + self.draggerOffset.width, y: 0)
                     .gesture(
                         DragGesture()
                             .onChanged {
                                 self.player.pause()
-                                withAnimation(.easeIn(duration: 0.1)) {
-                                    self.draggerScale = 1.4
-                                }
+                                self.updateDraggerKnob(scaleUp: true)
                                 
                                 self.draggerOffset.width = self.handleOffsetBounds(
                                     newOffset: $0.translation.width,
-                                    totalWidth: geo.size.width
+                                    totalWidth: fullPage.size.width
                                 )
                                 
                                 self.progressLength = self.draggerPosition.width + self.draggerOffset.width
-                                self.percentage = (self.draggerOffset.width + self.draggerPosition.width) / (geo.size.width - 20)
+                                self.percentage = self.progressLength / self.calculateTotalWidth(fullPage: fullPage)
                             }
-                            .onEnded {
-                                withAnimation(.easeIn(duration: 0.1)) {
-                                    self.draggerScale = 1
-                                }
-                                
-                                self.draggerPosition.width += self.handleOffsetBounds(
-                                    newOffset: $0.translation.width,
-                                    totalWidth: geo.size.width
-                                )
-                                self.progressLength = self.draggerPosition.width
-                                
+                            .onEnded { _ in
+                                self.updateDraggerKnob(scaleUp: false)
                                 self.draggerOffset = CGSize.zero
+                                self.draggerPosition.width = self.percentage * self.calculateTotalWidth(fullPage: fullPage)
                                 
-                                let duration = self.player.currentItem?.duration.seconds ?? 0
-                                self.seekToTime(for: self.percentage * duration)
+                                self.seekToTime(for: self.percentage * self.totalDuration)
                                 self.player.play()
+                                self.onDragEnd()
                             }
                     )
             }
             .onAppear {
-                self.totalLength = geo.size.width
-                self.setupAVPlayerListener()
+                self.setupAVPlayerListener(fullPage: fullPage)
             }
         }
-        .frame(height: 20)
+        .frame(height: self.draggerSize)
     }
     
-    func setupAVPlayerListener() {
+    func setupAVPlayerListener(fullPage: GeometryProxy) {
         let interval = CMTime(seconds: 0.1, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         self.player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
-            let duration = self.player.currentItem?.duration.seconds ?? 0
+            let duration = self.totalDuration
             self.percentage = time.seconds / duration
             withAnimation {
-                self.draggerPosition.width = self.percentage * (self.totalLength - 20)
+                self.draggerPosition.width = self.percentage * self.calculateTotalWidth(fullPage: fullPage)
                 self.progressLength = self.draggerPosition.width
             }
         }
@@ -98,6 +86,20 @@ struct VideoSlider: View {
         self.player.seek(to: interval)
     }
     
+    func updateDraggerKnob(scaleUp: Bool) {
+        withAnimation(.easeIn(duration: 0.1)) {
+            if scaleUp {
+                self.draggerScale = 1.4
+            } else {
+                self.draggerScale = 1
+            }
+        }
+    }
+    
+    func calculateTotalWidth(fullPage: GeometryProxy) -> CGFloat {
+        fullPage.size.width - 20
+    }
+    
     // For ensuring that the dragger never goes off the screen
     func handleOffsetBounds(newOffset: CGFloat, totalWidth: CGFloat) -> CGFloat {
         var final_offset = newOffset
@@ -105,7 +107,7 @@ struct VideoSlider: View {
             final_offset += abs(newOffset) - self.draggerPosition.width
         }
         
-        let final_offset_and_dragger = self.draggerPosition.width + newOffset + 20
+        let final_offset_and_dragger = self.draggerPosition.width + newOffset + self.draggerSize
         if final_offset_and_dragger > totalWidth {
             final_offset -= final_offset_and_dragger - totalWidth
         }

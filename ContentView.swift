@@ -48,7 +48,9 @@ struct ContentView: View {
                             Text("2:57")
                                 .foregroundColor(.secondary)
                         }
-                        VideoSlider(player: self.player, color: .accentColor)
+                        VideoSlider(player: self.player, color: .accentColor) {
+                            self.isPlaying = true
+                        }
                     }
                 }
                 .padding(.horizontal, 10)
@@ -56,7 +58,11 @@ struct ContentView: View {
                 
                 HStack(spacing: 40) {
                     Spacer()
-                    SkipBackward()
+                    Image(systemName: "gobackward.10")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 30)
+                        .onTapGesture { self.playerSkipTime(forward: false) }
                     Image(systemName: self.isPlaying ? "pause" : "play")
                         .resizable()
                         .scaledToFit()
@@ -69,7 +75,11 @@ struct ContentView: View {
                                 self.player.pause()
                             }
                         }
-                    SkipForward()
+                    Image(systemName: "goforward.10")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 30)
+                        .onTapGesture { self.playerSkipTime(forward: true) }
                     Spacer()
                 }
             }
@@ -91,5 +101,15 @@ struct ContentView: View {
         self.player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
             self.currentTime = time.seconds
         }
+    }
+    
+    func playerSkipTime(forward: Bool) {
+        let skip_seconds: Double = forward ? 10 : -10
+        let current_seconds = self.player.currentTime().seconds
+        let interval = CMTime(
+            seconds: skip_seconds + current_seconds,
+            preferredTimescale: CMTimeScale(NSEC_PER_SEC)
+        )
+        self.player.seek(to: interval)
     }
 }
