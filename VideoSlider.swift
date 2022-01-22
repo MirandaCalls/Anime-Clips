@@ -56,7 +56,7 @@ struct VideoSlider: View {
                                 self.draggerOffset = CGSize.zero
                                 self.draggerPosition.width = self.percentage * self.calculateTotalWidth(fullPage: fullPage)
                                 
-                                self.seekToTime(for: self.percentage * self.totalDuration)
+                                self.player.seekTo(seconds: self.percentage * self.totalDuration)
                                 self.player.play()
                                 self.onDragEnd()
                             }
@@ -79,11 +79,6 @@ struct VideoSlider: View {
                 self.progressLength = self.draggerPosition.width
             }
         }
-    }
-    
-    func seekToTime(for seconds: Double) {
-        let interval = CMTime(seconds: seconds, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-        self.player.seek(to: interval)
     }
     
     func updateDraggerKnob(scaleUp: Bool) {

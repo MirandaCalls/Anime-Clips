@@ -41,3 +41,18 @@ final class VideoPlayer: UIViewRepresentable {
     
     func updateUIView(_ uiView: AVPlayerView, context: Context) {}
 }
+
+extension AVPlayer {
+    func seekTo(seconds: Double) {
+        let interval = CMTime(seconds: seconds, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        self.seek(to: interval)
+    }
+    func skip(seconds: Double) {
+        let current_seconds = self.currentTime().seconds
+        let interval = CMTime(
+            seconds: seconds + current_seconds,
+            preferredTimescale: CMTimeScale(NSEC_PER_SEC)
+        )
+        self.seek(to: interval)
+    }
+}
