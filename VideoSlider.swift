@@ -70,14 +70,12 @@ struct VideoSlider: View {
     }
     
     func setupAVPlayerListener(fullPage: GeometryProxy) {
-        let interval = CMTime(seconds: 0.1, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        let interval = CMTime(seconds: 0.05, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         self.player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
             let duration = self.totalDuration
             self.percentage = time.seconds / duration
-            withAnimation {
-                self.draggerPosition.width = self.percentage * self.calculateTotalWidth(fullPage: fullPage)
-                self.progressLength = self.draggerPosition.width
-            }
+            self.draggerPosition.width = self.percentage * self.calculateTotalWidth(fullPage: fullPage)
+            self.progressLength = self.draggerPosition.width
         }
     }
     

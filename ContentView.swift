@@ -1,12 +1,6 @@
 import SwiftUI
 import AVKit
 
-/**
- * TODO
- * - Make skip buttons jump a little when tapped
- * - Make the video reset to the beginning when it finishes
- */
-
 struct ContentView: View {
     let totalSeconds = 177
     
@@ -43,20 +37,20 @@ struct ContentView: View {
                 
                 HStack(spacing: 40) {
                     Spacer()
-                    SkipButton(player: self.player, forward: false)
-                    Image(systemName: self.isPlaying ? "pause" : "play")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: self.isPlaying ? 30 : 40)
-                        .onTapGesture {
-                            self.isPlaying.toggle()
-                            if self.isPlaying {
-                                self.player.play()
-                            } else {
-                                self.player.pause()
-                            }
+                    Button("Skip Backward") {
+                        self.player.skip(seconds: -10)
+                    }.buttonStyle(SkipButtonStyle(forward: false))
+                    Button("Play/Pause") {
+                        self.isPlaying.toggle()
+                        if self.isPlaying {
+                            self.player.play()
+                        } else {
+                            self.player.pause()
                         }
-                    SkipButton(player: self.player, forward: true)
+                    }.buttonStyle(PlayButtonStyle(isPlaying: self.isPlaying))
+                    Button("Skip Forward") {
+                        self.player.skip(seconds: 10)
+                    }.buttonStyle(SkipButtonStyle(forward: true))
                     Spacer()
                 }
             }
