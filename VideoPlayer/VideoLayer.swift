@@ -28,7 +28,7 @@ class AVPlayerView: UIView {
     }
 }
 
-final class VideoPlayer: UIViewRepresentable {
+final class VideoLayer: UIViewRepresentable {
     let player: AVPlayer
     
     init(player: AVPlayer) {
