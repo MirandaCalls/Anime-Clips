@@ -17,9 +17,9 @@ struct TimeCounter: View {
         HStack {
             Text("\(self.formattedCurrentTime)")
             Text("/")
-                .foregroundColor(.secondary)
+                .foregroundColor(.gray)
             Text("\(self.formattedTotalSeconds)")
-                .foregroundColor(.secondary)
+                .foregroundColor(.gray)
         }
         .onAppear {
             self.setupSecondsCounter()

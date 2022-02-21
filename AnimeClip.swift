@@ -9,7 +9,7 @@ struct Anime {
     var type: Anime.Format
 }
 
-struct AnimeClip {
+struct AnimeClip: Identifiable {
     struct FileDetails {
         var fileName: String
         var fileExtension: String
@@ -20,6 +20,7 @@ struct AnimeClip {
     var title: String
     var anime: Anime
     var description: String
+    var length: Int
     var file: AnimeClip.FileDetails
     
     static public var example: AnimeClip {
@@ -31,6 +32,7 @@ struct AnimeClip {
             title: "Life is a God-Tier Game",
             anime: anime,
             description: "Season 1 Episode 1",
+            length: 177,
             file: details
         )
     }

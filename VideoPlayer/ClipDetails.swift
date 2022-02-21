@@ -16,7 +16,7 @@ struct ClipDetails: View {
                 Text(self.series)
                 Text(self.episodeDetail)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.gray)
             }
         }
     }

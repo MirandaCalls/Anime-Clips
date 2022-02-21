@@ -1,33 +1,45 @@
 import SwiftUI
 import AVKit
 
-// AVPlayer(url: Bundle.main.url(forResource: "LifeIsAGodTierGame", withExtension: "mp4")!)
-
 struct VideoPlayer: View {
+    @Environment(\.presentationMode) var presentationMode
+    let clip: AnimeClip
     let player: AVPlayer
-    let totalSeconds = 177
     
     @State private var showOverlay = false
-    @State private var isPlaying = false
+    @State private var isPlaying = true
+    
+    init(clip: AnimeClip) {
+        self.clip = clip
+        let url = Bundle.main.url(forResource: clip.file.fileName, withExtension: clip.file.fileExtension)!
+        self.player = AVPlayer(url: url)
+    }
     
     var body: some View {
         ZStack {
+            Color.black
+                .edgesIgnoringSafeArea(.all)
             VideoLayer(player: self.player)
             ZStack {
                 Color.black.opacity(0.5)
                 VStack(alignment: .leading) {
                     HStack(alignment: .top) {
                         ClipDetails(
-                            clipTitle: "Life is a God-Tier Game!",
-                            series: "Bottom-Tier Character Tomozaki",
-                            episodeDetail: "Season 1 Episode 1"
+                            clipTitle: self.clip.title,
+                            series: self.clip.anime.title,
+                            episodeDetail: self.clip.description
                         )
                         Spacer()
                         Image(systemName: "xmark.circle.fill")
+                            .onTapGesture {
+                                self.player.pause()
+                                self.presentationMode.wrappedValue.dismiss()
+                            }
+                            .padding(.top, 10)
                     }
                     Spacer()
                     VStack(alignment: .leading) {
-                        TimeCounter(player: self.player, totalSeconds: self.totalSeconds)
+                        TimeCounter(player: self.player, totalSeconds: self.clip.length)
                         VideoSlider(player: self.player, color: .accentColor) {
                             // When the user has finished dragging, resume playing
                             self.isPlaying = true
@@ -59,10 +71,16 @@ struct VideoPlayer: View {
             .opacity(self.showOverlay ? 1 : 0)
             .zIndex(1)
         }
+        .foregroundColor(.white)
+        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
         .onTapGesture {
             withAnimation(self.showOverlay ? .easeOut : .easeIn) {
                 self.showOverlay.toggle()
             }
+        }
+        .onAppear {
+            self.player.play()
         }
     }
 }

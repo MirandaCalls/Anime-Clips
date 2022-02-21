@@ -23,6 +23,7 @@ struct ClipTile: View {
                     .frame(width: 40)
                     .opacity(0.8)
             }
+            .foregroundColor(.white)
             Text(self.clip.title)
                 .font(.caption)
         }
